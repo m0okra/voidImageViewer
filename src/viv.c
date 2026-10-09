@@ -3709,7 +3709,11 @@ debug_printf("NEXT AFTER LOAD %S\n",fd->cFileName);
 						
 						if ((mx) || (my))
 						{
+							// pin the cursor so the middle mouse button drags like a trackpoint,
 							SetCursorPos(_viv_mdoing_x,_viv_mdoing_y);
+
+							// mx/my are the movement we just swallowed, scroll the view by it.
+							_viv_view_scroll(mx,my);
 						}
 					}
 					
