@@ -286,6 +286,9 @@ static const utf8_t *_localization_string_array_zh_cn[LOCALIZATION_ID_COUNT] =
 	"随机化", // LOCALIZATION_ID_RANDOMIZE,
 	"复制到", // LOCALIZATION_ID_COPY_TO_CAPTION,
 	"移动到", // LOCALIZATION_ID_MOVE_TO_CAPTION,
+	"边缘点击区域(&Z):", // LOCALIZATION_ID_EDGE_CLICK_ZONE_STATIC,
+	"像素", // LOCALIZATION_ID_EDGE_CLICK_ZONE_UNIT_STATIC,
+	"(0 = 禁用)", // LOCALIZATION_ID_EDGE_CLICK_ZONE_DISABLED_STATIC,
 
 	// Association descriptions
 	"Bitmap Image",

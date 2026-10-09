@@ -61,6 +61,7 @@ BYTE config_mouse_wheel_action = 0; // 0 = zoom, 1 = next/prev, 2=prev/next
 BYTE config_ctrl_mouse_wheel_action = 0; // 0 = zoom, 1 = next/prev, 2=prev/next
 BYTE config_left_click_action = 0; // 0 = scroll, 1 = play/pause slideshow, 2 = play/pause animation, 3=zoom in, 4=next, 5=1:1 scroll, 6=move-window
 BYTE config_right_click_action = 0; // 0 = context menu, 1=zoom out, 2=prev, 
+int config_edge_click_zone_wide = 0; // left/right edge click zone width in logical pixels, 0 = disabled
 BYTE config_xbutton_action = 2; // 1=zoom, 2=next
 BYTE config_windowed_background_color_r = 255;
 BYTE config_windowed_background_color_g = 255;
@@ -133,6 +134,12 @@ static void _config_load_settings_by_location(const wchar_t *path,int is_root)
 		config_ctrl_mouse_wheel_action = ini_get_int(ini,(const utf8_t *)"ctrl_mouse_wheel_action",config_ctrl_mouse_wheel_action);
 		config_left_click_action = ini_get_int(ini,(const utf8_t *)"left_click_action",config_left_click_action);
 		config_right_click_action = ini_get_int(ini,(const utf8_t *)"right_click_action",config_right_click_action);
+		config_edge_click_zone_wide = ini_get_int(ini,(const utf8_t *)"edge_click_zone_wide",config_edge_click_zone_wide);
+		
+		if (config_edge_click_zone_wide < 0)
+		{
+			config_edge_click_zone_wide = 0;
+		}
 		config_xbutton_action = ini_get_int(ini,(const utf8_t *)"xbutton_action",config_xbutton_action);
 		config_keep_centered = ini_get_int(ini,(const utf8_t *)"keep_centered",config_keep_centered);
 		config_windowed_background_color_r = ini_get_int(ini,(const utf8_t *)"windowed_background_color_r",config_windowed_background_color_r);
@@ -317,6 +324,7 @@ static void _config_save_settings_by_location(const wchar_t *path,int is_root)
 			_config_write_int(h,"ctrl_mouse_wheel_action",config_ctrl_mouse_wheel_action);
 			_config_write_int(h,"left_click_action",config_left_click_action);
 			_config_write_int(h,"right_click_action",config_right_click_action);
+			_config_write_int(h,"edge_click_zone_wide",config_edge_click_zone_wide);
 			_config_write_int(h,"xbutton_action",config_xbutton_action);
 			_config_write_int(h,"keep_centered",config_keep_centered);
 			_config_write_int(h,"windowed_background_color_r",config_windowed_background_color_r);

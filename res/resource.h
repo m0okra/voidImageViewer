@@ -128,6 +128,10 @@
 #define IDC_CUSTOM_RATE_STATIC              1064
 #define IDC_EDIT_KEYBOARD_SHORTCUT_KEY_STATIC 1065
 #define IDC_EDIT_KEYBOARD_SHORTCUT_KEY_CURRENTLY_USED_BY_STATIC 1066
+#define IDC_EDGE_CLICK_ZONE_STATIC          1067
+#define IDC_EDGE_CLICK_ZONE_EDIT            1068
+#define IDC_EDGE_CLICK_ZONE_UNIT_STATIC     1069
+#define IDC_EDGE_CLICK_ZONE_DISABLED_STATIC 1070
 
 // Next default values for new objects
 // 
@@ -136,7 +140,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        132
 #define _APS_NEXT_COMMAND_VALUE         40048
-#define _APS_NEXT_CONTROL_VALUE         1067
+#define _APS_NEXT_CONTROL_VALUE         1071
 #define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif

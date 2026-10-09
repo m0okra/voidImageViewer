@@ -90,6 +90,7 @@ extern BYTE config_mouse_wheel_action;
 extern BYTE config_ctrl_mouse_wheel_action;
 extern BYTE config_left_click_action;
 extern BYTE config_right_click_action;
+extern int config_edge_click_zone_wide; // left/right edge click zone width in logical pixels, 0 = disabled
 extern BYTE config_xbutton_action;
 extern BYTE config_windowed_background_color_r;
 extern BYTE config_windowed_background_color_g;

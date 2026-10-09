@@ -489,6 +489,10 @@ static void _viv_file_edit(void);
 static void _viv_open_file_location(void);
 static void _viv_properties(void);
 static void _viv_doing_cancel(void);
+static int _viv_get_edge_click_zone(int x);
+static void _viv_start_edge_click(int zone);
+static void _viv_cancel_edge_click(void);
+static LPCTSTR _viv_get_scroll_cursor_id(void);
 static const char *_viv_get_copydata_string(const char *p,const char *e,wchar_t *buf,int bufsize);
 static void _viv_blank(void);
 static void _viv_options(void);
@@ -699,6 +703,7 @@ static VIV_UINT64 _viv_animation_timer_tick_start = 0; // the current start tick
 static BYTE _viv_doing = _VIV_DOING_NOTHING; // current mouse action, such as drag to scroll image
 static int _viv_doing_x;
 static int _viv_doing_y;
+static BYTE _viv_edge_click = 0; // pending edge click action: 0 = none, 1 = left edge (previous image), 2 = right edge (next image)
 static int _viv_mdoing_x;
 static int _viv_mdoing_y;
 static BYTE _viv_fullscreen_is_maxed = 0;
@@ -3300,6 +3305,13 @@ debug_printf("NEXT AFTER LOAD %S\n",fd->cFileName);
 			_viv_show_cursor();
 			_viv_update_show_cursor();
 
+			// an edge click zone consumes the double click: the click gesture has already
+			// navigated, don't toggle fullscreen here.
+			if (_viv_get_edge_click_zone(GET_X_LPARAM(lParam)))
+			{
+				break;
+			}
+
 			// 0 = scroll, 1 = play/pause slideshow, 2 = play/pause animation, 3=zoom in, 4=next, 5=1:1 scroll
 			switch(config_left_click_action)
 			{
@@ -3318,13 +3330,39 @@ debug_printf("NEXT AFTER LOAD %S\n",fd->cFileName);
 			break;
 			
 		case WM_LBUTTONDOWN:
+		{
+			int edge_click_zone;
 		
 			_viv_show_cursor();
 			_viv_update_show_cursor();
 			
+			edge_click_zone = _viv_get_edge_click_zone(GET_X_LPARAM(lParam));
+			
+			if (edge_click_zone)
+			{
+				// the edge click zone completely takes over the left button.
+				_viv_start_edge_click(edge_click_zone);
+				
+				return 0;
+			}
+			
 			_viv_do_left_click_action(config_left_click_action);
+
+			if (_viv_doing == _VIV_DOING_SCROLL)
+			{
+				LPCTSTR cursor_id;
+
+				// show the drag to scroll cursor immediately, WM_SETCURSOR may not arrive until the mouse moves.
+				cursor_id = _viv_get_scroll_cursor_id();
+
+				if (cursor_id)
+				{
+					SetCursor(LoadCursor(0,cursor_id));
+				}
+			}
 		
 			break;
+		}
 			
 		case WM_MBUTTONDOWN:
 			if (_viv_doing == _VIV_DOING_NOTHING)
@@ -3548,6 +3586,8 @@ debug_printf("NEXT AFTER LOAD %S\n",fd->cFileName);
 			
 			if (wParam == WA_INACTIVE)
 			{
+				_viv_cancel_edge_click();
+			
 				if (!_viv_prevent_on_deactivate)
 				{
 					_viv_show_cursor();
@@ -3558,6 +3598,55 @@ debug_printf("NEXT AFTER LOAD %S\n",fd->cFileName);
 				_viv_update_show_cursor();
 			}
 			break;
+			
+		case WM_CAPTURECHANGED:
+		case WM_KILLFOCUS:
+			
+			// if we lose the capture or focus we will never get the matching button up.
+			_viv_cancel_edge_click();
+			
+			break;
+			
+		case WM_SETCURSOR:
+		{
+			if (_viv_doing == _VIV_DOING_SCROLL)
+			{
+				LPCTSTR cursor_id;
+				
+				cursor_id = _viv_get_scroll_cursor_id();
+				
+				if (cursor_id)
+				{
+					// keep the scroll cursor while dragging, even when the mouse is outside
+					// of the client area (we still have the capture).
+					SetCursor(LoadCursor(0,cursor_id));
+					
+					return TRUE;
+				}
+			}
+			else
+			if ((LOWORD(lParam) == HTCLIENT) && (!_viv_doing))
+			{
+				if (config_edge_click_zone_wide > 0)
+				{
+					POINT pt;
+					
+					// WM_SETCURSOR has no cursor position, query it.
+					GetCursorPos(&pt);
+					ScreenToClient(hwnd,&pt);
+					
+					if (_viv_get_edge_click_zone(pt.x))
+					{
+						// link select cursor to show the edge is clickable.
+						SetCursor(LoadCursor(0,IDC_HAND));
+						
+						return TRUE;
+					}
+				}
+			}
+			
+			break;
+		}
 			
 		case WM_MOUSELEAVE:
 		
@@ -3665,6 +3754,27 @@ debug_printf("NEXT AFTER LOAD %S\n",fd->cFileName);
 			
 		case WM_LBUTTONUP:
 		case WM_MBUTTONUP:
+		
+			if (_viv_edge_click)
+			{
+				int prev;
+
+				if (msg != WM_LBUTTONUP)
+				{
+					// still waiting for the left button up, don't steal the pending edge click.
+					break;
+				}
+
+				prev = (_viv_edge_click == 1);
+
+				_viv_cancel_edge_click();
+				ReleaseCapture();
+
+				// clicking the left edge goes to the previous image, the right edge to the next image.
+				_viv_next(prev,1,0,0);
+
+				return 0;
+			}
 		
 			_viv_doing_cancel();
 			
@@ -7847,8 +7957,106 @@ static void _viv_properties(void)
 	}
 }
 
+// returns 0 = no zone, 1 = left edge, 2 = right edge.
+// the zone is only active when idle, so we never steal a left button from an action in progress.
+static int _viv_get_edge_click_zone(int x)
+{
+	RECT rect;
+	int wide;
+	int zone_wide;
+
+	if (config_edge_click_zone_wide <= 0)
+	{
+		return 0;
+	}
+
+	if (_viv_doing)  
+	{
+		return 0;
+	}
+
+	GetClientRect(_viv_hwnd,&rect);
+	wide = rect.right - rect.left;
+
+	if (wide <= 0)
+	{
+		return 0;
+	}
+
+	zone_wide = (config_edge_click_zone_wide * os_logical_wide) / 96;
+
+	if (zone_wide <= 0)
+	{
+		return 0;
+	}
+
+	if (x < zone_wide)
+	{
+		return 1;
+	}
+
+	if (x >= wide - zone_wide)
+	{
+		return 2;
+	}
+
+	return 0;
+}
+
+static void _viv_start_edge_click(int zone)
+{
+	_viv_edge_click = (BYTE)zone;
+
+	SetCapture(_viv_hwnd);
+}
+
+static void _viv_cancel_edge_click(void)
+{
+	_viv_edge_click = 0;
+}
+
+// the cursor for the current drag to scroll action, based on the directions we can actually scroll.
+static LPCTSTR _viv_get_scroll_cursor_id(void)
+{
+	RECT rect;
+	int wide;
+	int high;
+	int rw;
+	int rh;
+	int can_x;
+	int can_y;
+
+	GetClientRect(_viv_hwnd,&rect);
+	wide = rect.right - rect.left;
+	high = rect.bottom - rect.top - _viv_get_status_high() - _viv_get_controls_high();
+
+	_viv_get_render_size(&rw,&rh);
+
+	can_x = (rw > wide);
+	can_y = (rh > high);
+
+	if ((can_x) && (can_y))
+	{
+		return IDC_SIZEALL;
+	}
+
+	if (can_y)
+	{
+		return IDC_SIZENS;
+	}
+
+	if (can_x)
+	{
+		return IDC_SIZEWE;
+	}
+
+	return 0;
+}
+
 static void _viv_doing_cancel(void)
 {
+	_viv_cancel_edge_click();
+
 	if (_viv_doing)
 	{
 		int was_doing;
@@ -8247,6 +8455,11 @@ static INT_PTR CALLBACK _viv_options_controls_proc(HWND hwnd,UINT msg,WPARAM wPa
 			os_ComboBox_AddString_localization_id(hwnd,IDC_MOUSEWHEELACTION_COMBOBOX,LOCALIZATION_ID_OPTIONS_ACTION_NEXT_PREV_COMBOBOXITEM);
 			os_ComboBox_AddString_localization_id(hwnd,IDC_MOUSEWHEELACTION_COMBOBOX,LOCALIZATION_ID_OPTIONS_ACTION_PREV_NEXT_COMBOBOXITEM);
 			ComboBox_SetCurSel(GetDlgItem(hwnd,IDC_MOUSEWHEELACTION_COMBOBOX),config_mouse_wheel_action);
+
+			os_SetDlgItemText_localization_id(hwnd,IDC_EDGE_CLICK_ZONE_STATIC,LOCALIZATION_ID_EDGE_CLICK_ZONE_STATIC);
+			os_SetDlgItemText_localization_id(hwnd,IDC_EDGE_CLICK_ZONE_UNIT_STATIC,LOCALIZATION_ID_EDGE_CLICK_ZONE_UNIT_STATIC);
+			os_SetDlgItemText_localization_id(hwnd,IDC_EDGE_CLICK_ZONE_DISABLED_STATIC,LOCALIZATION_ID_EDGE_CLICK_ZONE_DISABLED_STATIC);
+			SetDlgItemInt(hwnd,IDC_EDGE_CLICK_ZONE_EDIT,config_edge_click_zone_wide,FALSE);
 
 			os_SetDlgItemText_localization_id(hwnd,IDC_COMMANDS_STATIC,LOCALIZATION_ID_COMMANDS_STATIC);
 			os_SetDlgItemText_localization_id(hwnd,IDC_SETTINGS_FOR_SELECTED_COMMAND_STATIC,LOCALIZATION_ID_SETTINGS_FOR_SELECTED_COMMAND);
@@ -8713,6 +8926,7 @@ static INT_PTR CALLBACK _viv_options_proc(HWND hwnd,UINT msg,WPARAM wParam,LPARA
 						config_left_click_action = ComboBox_GetCurSel(GetDlgItem(controls_page,IDC_LEFTCLICKACTION_COMBOBOX));
 						config_right_click_action = ComboBox_GetCurSel(GetDlgItem(controls_page,IDC_RIGHTCLICKACTION_COMBOBOX));
 						config_mouse_wheel_action = ComboBox_GetCurSel(GetDlgItem(controls_page,IDC_MOUSEWHEELACTION_COMBOBOX));
+						config_edge_click_zone_wide = GetDlgItemInt(controls_page,IDC_EDGE_CLICK_ZONE_EDIT,NULL,FALSE);
 						
 						if (ComboBox_GetCurSel(GetDlgItem(view_page,IDC_SHRINK_BLIT_MODE_COMBOBOX)) == 1)
 						{

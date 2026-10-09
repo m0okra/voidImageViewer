@@ -285,6 +285,9 @@ static const utf8_t *_localization_string_array_en_us[LOCALIZATION_ID_COUNT] =
 	"Randomize", // LOCALIZATION_ID_RANDOMIZE,
 	"Copy To", // LOCALIZATION_ID_COPY_TO_CAPTION,
 	"Move To", // LOCALIZATION_ID_MOVE_TO_CAPTION,
+	"Edge click &zone:", // LOCALIZATION_ID_EDGE_CLICK_ZONE_STATIC,
+	"px", // LOCALIZATION_ID_EDGE_CLICK_ZONE_UNIT_STATIC,
+	"(0 = disabled)", // LOCALIZATION_ID_EDGE_CLICK_ZONE_DISABLED_STATIC,
 
 	// Association descriptions
 	"Bitmap Image",
