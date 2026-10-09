@@ -198,6 +198,8 @@ IDI_NEXT                ICON                    "next.ico"
 IDI_PAUSE               ICON                    "pause.ico"
 IDI_1TO1                ICON                    "1to1-8bit.ico"
 IDI_BESTFIT             ICON                    "bestfit.ico"
+IDI_ROTATE_CW           ICON                    "rotate_cw.ico"
+IDI_ROTATE_CCW          ICON                    "rotate_ccw.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

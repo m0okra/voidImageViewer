@@ -11002,12 +11002,14 @@ static void _viv_controls_show(int show)
 			ImageList_AddIcon(_viv_toolbar_image_list,LoadIcon(os_hinstance,(LPCTSTR)IDI_NEXT));
 			ImageList_AddIcon(_viv_toolbar_image_list,LoadIcon(os_hinstance,(LPCTSTR)IDI_BESTFIT));
 			ImageList_AddIcon(_viv_toolbar_image_list,LoadIcon(os_hinstance,(LPCTSTR)IDI_1TO1));
+			ImageList_AddIcon(_viv_toolbar_image_list,LoadIcon(os_hinstance,(LPCTSTR)IDI_ROTATE_CW));
+			ImageList_AddIcon(_viv_toolbar_image_list,LoadIcon(os_hinstance,(LPCTSTR)IDI_ROTATE_CCW));
 
 			SendMessage(_viv_toolbar_hwnd,TB_SETIMAGELIST,0,(LPARAM)_viv_toolbar_image_list);
 
 			{
-				TBBUTTON buttons[8];
-				wchar_t button_text[8][STRING_SIZE];
+				TBBUTTON buttons[11];
+				wchar_t button_text[11][STRING_SIZE];
 				int buttoni;
 				
 				buttoni = 0;
@@ -11057,15 +11059,37 @@ static void _viv_controls_show(int show)
 				buttons[buttoni].fsStyle = TBSTYLE_SEP;
 				buttons[buttoni].iString = 0;
 				buttoni++;
-					
+				buttons[buttoni].iBitmap = 7;
+				buttons[buttoni].idCommand = VIV_ID_EDIT_ROTATE_270;
+				buttons[buttoni].fsState = TBSTATE_ENABLED;
+				buttons[buttoni].fsStyle = TBSTYLE_BUTTON;
+				string_copy_utf8_string(button_text[buttoni],localization_get_string(LOCALIZATION_ID_TOOLBAR_ROTATE_COUNTERCLOCKWISE_BUTTON));
+				buttons[buttoni].iString = (INT_PTR)button_text[buttoni];
+				buttoni++;
+
+				buttons[buttoni].iBitmap = 6;
+				buttons[buttoni].idCommand = VIV_ID_EDIT_ROTATE_90;
+				buttons[buttoni].fsState = TBSTATE_ENABLED;
+				buttons[buttoni].fsStyle = TBSTYLE_BUTTON;
+				string_copy_utf8_string(button_text[buttoni],localization_get_string(LOCALIZATION_ID_TOOLBAR_ROTATE_CLOCKWISE_BUTTON));
+				buttons[buttoni].iString = (INT_PTR)button_text[buttoni];
+				buttoni++;
+
+				buttons[buttoni].iBitmap = 0;
+				buttons[buttoni].idCommand = 0;
+				buttons[buttoni].fsState = 0;
+				buttons[buttoni].fsStyle = TBSTYLE_SEP;
+				buttons[buttoni].iString = 0;
+				buttoni++;
+
 				buttons[buttoni].iBitmap = 4;
 				buttons[buttoni].idCommand = VIV_ID_VIEW_BESTFIT;
 				buttons[buttoni].fsState = TBSTATE_ENABLED;
 				buttons[buttoni].fsStyle = TBSTYLE_BUTTON;
 				string_copy_utf8_string(button_text[buttoni],localization_get_string(LOCALIZATION_ID_TOOLBAR_BEST_FIT_BUTTON));
 				buttons[buttoni].iString = (INT_PTR)button_text[buttoni];
-				buttoni++;				
-					
+				buttoni++;
+
 				buttons[buttoni].iBitmap = 5;
 				buttons[buttoni].idCommand = VIV_ID_VIEW_1TO1;
 				buttons[buttoni].fsState = TBSTATE_ENABLED;
@@ -11073,8 +11097,8 @@ static void _viv_controls_show(int show)
 				string_copy_utf8_string(button_text[buttoni],localization_get_string(LOCALIZATION_ID_TOOLBAR_ACTUAL_SIZE_BUTTON));
 				buttons[buttoni].iString = (INT_PTR)button_text[buttoni];
 				buttoni++;
-					
-				SendMessage(_viv_toolbar_hwnd,TB_ADDBUTTONS,8,(LPARAM)buttons);
+
+				SendMessage(_viv_toolbar_hwnd,TB_ADDBUTTONS,11,(LPARAM)buttons);
 			}
 
 			_viv_toolbar_update_buttons();
@@ -11695,6 +11719,14 @@ static void _viv_toolbar_update_buttons(void)
 		tbbinfo.fsState = ((_viv_zoom_pos == 0) && (!_viv_1to1)) ? (0) : (TBSTATE_ENABLED);
 		
 		SendMessage(_viv_toolbar_hwnd,TB_SETBUTTONINFO,VIV_ID_VIEW_BESTFIT,(LPARAM)&tbbinfo);
+		
+		// rotate buttons are only usable when there is a loaded image.
+		tbbinfo.cbSize = sizeof(TBBUTTONINFO);
+		tbbinfo.dwMask = TBIF_STATE;
+		tbbinfo.fsState = ((*_viv_current_fd->cFileName) && (!_viv_file_not_found) && (!_viv_load_failed)) ? (TBSTATE_ENABLED) : (0);
+		
+		SendMessage(_viv_toolbar_hwnd,TB_SETBUTTONINFO,VIV_ID_EDIT_ROTATE_90,(LPARAM)&tbbinfo);
+		SendMessage(_viv_toolbar_hwnd,TB_SETBUTTONINFO,VIV_ID_EDIT_ROTATE_270,(LPARAM)&tbbinfo);
 	}
 }
 
