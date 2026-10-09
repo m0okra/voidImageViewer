@@ -132,6 +132,7 @@
 #define IDC_EDGE_CLICK_ZONE_EDIT            1068
 #define IDC_EDGE_CLICK_ZONE_UNIT_STATIC     1069
 #define IDC_EDGE_CLICK_ZONE_DISABLED_STATIC 1070
+#define IDC_ROTATE_IMAGE_WITHOUT_MODIFYING_FILE 1071
 
 // Next default values for new objects
 // 
@@ -140,7 +141,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        132
 #define _APS_NEXT_COMMAND_VALUE         40048
-#define _APS_NEXT_CONTROL_VALUE         1071
+#define _APS_NEXT_CONTROL_VALUE         1072
 #define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif

@@ -7833,20 +7833,38 @@ static void _viv_edit_rotate(int counterclockwise)
 		// FIXME: we need to wait for image to load.
 		if (_viv_frame_loaded_count == _viv_frame_count)
 		{
-			// this tends to fail if called too quickly after a previous call
-			// can't seem to catch the error ..
-			if (os_shell_execute(_viv_hwnd,_viv_current_fd->cFileName,1,counterclockwise ? "rotate270" : "rotate90",0))
+			int rotate_ok;
+
+			rotate_ok = 0;
+
+			if (config_rotate_in_memory_only)
+			{
+				// rotate the image in memory only, the image file is left untouched.
+				rotate_ok = 1;
+			}
+			else
+			{
+				// rotate the image file.
+				// this tends to fail if called too quickly after a previous call
+				// can't seem to catch the error ..
+				if (os_shell_execute(_viv_hwnd,_viv_current_fd->cFileName,1,counterclockwise ? "rotate270" : "rotate90",0))
+				{
+					rotate_ok = 1;
+				}
+			}
+
+			if (rotate_ok)
 			{
 				int i;
 				int temp;
 
-				// rotate images in memory too
-				
+				// rotate the images in memory.
+				// _viv_orientate_hbitmap expects the EXIF orientation that is currently
+				// applied to the bitmap, so we pass the opposite of what we want.
 				for(i=0;i<_viv_frame_count;i++)
 				{
 					HBITMAP new_hbitmap;
 					
-					// i do the reverse to reverse the orientation.
 					new_hbitmap = _viv_orientate_hbitmap(_viv_frames[i].hbitmap,counterclockwise ? 8 : 6);
 					
 					if (new_hbitmap)
@@ -8610,6 +8628,9 @@ static INT_PTR CALLBACK _viv_options_view_proc(HWND hwnd,UINT msg,WPARAM wParam,
 
 			os_SetDlgItemText_localization_id(hwnd,IDC_CACHE_LAST_IMAGE_STATIC,LOCALIZATION_ID_CACHE_LAST_IMAGE_STATIC);
 			CheckDlgButton(hwnd,IDC_CACHE_LAST_IMAGE_STATIC,config_cache_last ? BST_CHECKED : BST_UNCHECKED);
+
+			os_SetDlgItemText_localization_id(hwnd,IDC_ROTATE_IMAGE_WITHOUT_MODIFYING_FILE,LOCALIZATION_ID_ROTATE_IMAGE_WITHOUT_MODIFYING_FILE_STATIC);
+			CheckDlgButton(hwnd,IDC_ROTATE_IMAGE_WITHOUT_MODIFYING_FILE,config_rotate_in_memory_only ? BST_CHECKED : BST_UNCHECKED);
 			
 			{
 				int static_wide;
@@ -8992,6 +9013,7 @@ static INT_PTR CALLBACK _viv_options_proc(HWND hwnd,UINT msg,WPARAM wParam,LPARA
 					config_loop_animations_once = IsDlgButtonChecked(view_page,IDC_LOOP_ANIMATIONS_ONCE_STATIC) == BST_CHECKED ? 1 : 0;
 					config_preload_next = IsDlgButtonChecked(view_page,IDC_PRELOAD_NEXT_IMAGE_STATIC) == BST_CHECKED ? 1 : 0;
 					config_cache_last = IsDlgButtonChecked(view_page,IDC_CACHE_LAST_IMAGE_STATIC) == BST_CHECKED ? 1 : 0;
+					config_rotate_in_memory_only = IsDlgButtonChecked(view_page,IDC_ROTATE_IMAGE_WITHOUT_MODIFYING_FILE) == BST_CHECKED ? 1 : 0;
 					
 					// copy keys.
 					_viv_key_list_copy(_viv_key_list,(_viv_key_list_t *)GetWindowLongPtr(GetDlgItem(controls_page,IDC_COMMANDS_LIST),GWLP_USERDATA));

@@ -288,6 +288,7 @@ static const utf8_t *_localization_string_array_en_us[LOCALIZATION_ID_COUNT] =
 	"Edge click &zone:", // LOCALIZATION_ID_EDGE_CLICK_ZONE_STATIC,
 	"px", // LOCALIZATION_ID_EDGE_CLICK_ZONE_UNIT_STATIC,
 	"(0 = disabled)", // LOCALIZATION_ID_EDGE_CLICK_ZONE_DISABLED_STATIC,
+	"Rotate image &without modifying the file", // LOCALIZATION_ID_ROTATE_IMAGE_WITHOUT_MODIFYING_FILE_STATIC,
 
 	// Association descriptions
 	"Bitmap Image",

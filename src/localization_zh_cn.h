@@ -289,6 +289,7 @@ static const utf8_t *_localization_string_array_zh_cn[LOCALIZATION_ID_COUNT] =
 	"边缘点击区域(&Z):", // LOCALIZATION_ID_EDGE_CLICK_ZONE_STATIC,
 	"像素", // LOCALIZATION_ID_EDGE_CLICK_ZONE_UNIT_STATIC,
 	"(0 = 禁用)", // LOCALIZATION_ID_EDGE_CLICK_ZONE_DISABLED_STATIC,
+	"旋转图片不修改文件(&W)", // LOCALIZATION_ID_ROTATE_IMAGE_WITHOUT_MODIFYING_FILE_STATIC,
 
 	// Association descriptions
 	"Bitmap Image",

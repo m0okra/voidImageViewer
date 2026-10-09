@@ -119,6 +119,7 @@ extern BYTE config_windowed_hide_cursor;
 extern BYTE config_auto_zoom;
 extern BYTE config_pixel_info;
 extern BYTE config_orientation;
+extern BYTE config_rotate_in_memory_only;
 extern BYTE config_title_bar_format;
 extern int config_add_command_line_timeout;
 

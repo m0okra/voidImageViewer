@@ -89,6 +89,7 @@ BYTE config_toolbar_move_window = 1;
 BYTE config_windowed_hide_cursor = 1;
 BYTE config_pixel_info = 0;
 BYTE config_orientation = 1;
+BYTE config_rotate_in_memory_only = 1; // rotate the image in memory only, do not modify the image file.
 BYTE config_title_bar_format = 1; // 0=full path, 1=filename, 2=none
 int config_add_command_line_timeout = 500; // in milliseconds
 
@@ -165,6 +166,7 @@ static void _config_load_settings_by_location(const wchar_t *path,int is_root)
 		config_cache_last = ini_get_int(ini,(const utf8_t *)"cache_last",config_cache_last);
 		config_icm = ini_get_int(ini,(const utf8_t *)"icm",config_icm);
 		config_orientation = ini_get_int(ini,(const utf8_t *)"orientation",config_orientation);
+		config_rotate_in_memory_only = ini_get_int(ini,(const utf8_t *)"rotate_in_memory_only",config_rotate_in_memory_only);
 		config_toolbar_move_window = ini_get_int(ini,(const utf8_t *)"toolbar_move_window",config_toolbar_move_window);
 		config_title_bar_format = ini_get_int(ini,(const utf8_t *)"title_bar_format",config_title_bar_format);
 		config_add_command_line_timeout = ini_get_int(ini,(const utf8_t *)"add_command_line_timeout",config_add_command_line_timeout);
@@ -350,6 +352,7 @@ static void _config_save_settings_by_location(const wchar_t *path,int is_root)
 			_config_write_int(h,"cache_last",config_cache_last);
 			_config_write_int(h,"icm",config_icm);
 			_config_write_int(h,"orientation",config_orientation);
+			_config_write_int(h,"rotate_in_memory_only",config_rotate_in_memory_only);
 			_config_write_int(h,"toolbar_move_window",config_toolbar_move_window);
 			_config_write_int(h,"title_bar_format",config_title_bar_format);
 			_config_write_int(h,"add_command_line_timeout",config_add_command_line_timeout);
